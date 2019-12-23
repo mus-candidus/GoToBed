@@ -88,7 +88,6 @@ namespace GoToBed {
                 Game1.player.Halt();
                 stayInBed_ = true;
 
-                // Spouse goes to bed.
                 NPC spouse = Game1.player.getSpouse();
                 FarmHouse farmHouse = who.currentLocation as FarmHouse;
 
@@ -100,6 +99,9 @@ namespace GoToBed {
 
                     return;
                 }
+
+                // Spouse goes to bed.
+                this.Monitor.Log($"Spouse {spouse.Name} goes to bed", LogLevel.Debug);
 
                 spouse.controller =
                     new PathFindController(
