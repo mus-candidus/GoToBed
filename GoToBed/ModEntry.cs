@@ -1,15 +1,16 @@
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
-
+using StardewValley.Menus;
 
 namespace GoToBed {
     public class ModEntry : Mod {
         private Vector2 bed_;
-        private volatile bool gotUp_;
         private volatile bool stayInBed_;
 
         public override void Entry(IModHelper helper) {
@@ -20,7 +21,6 @@ namespace GoToBed {
 
         private void ResetState() {
             // Reset state.
-            gotUp_     = false;
             stayInBed_ = false;
 
             // Detach event handler.
@@ -34,7 +34,6 @@ namespace GoToBed {
             bed_.Y += 32f;
 
             // ...but we can get up.
-            gotUp_ = false;
             stayInBed_ = false;
 
             // Attach event handler. We need the fast UpdateTicked event to stop player movement!
@@ -50,31 +49,23 @@ namespace GoToBed {
                 return;
             }
 
-            bool isInBed = Game1.player.isInBed.Value;
-
-            // Only ask if player was not in bed before to avoid multiple dialogs.
-            if (!Game1.eventUp && gotUp_ && isInBed) {
-                this.Monitor.Log("Go to bed?", LogLevel.Debug);
-
-                GameLocation currentLocation = Game1.player.currentLocation;
-                // Set answer callback.
-                currentLocation.afterQuestion = GoToBed;
-                currentLocation.createQuestionDialogue(
-                    Game1.content.LoadString("Strings\\Locations:FarmHouse_Bed_GoToSleep"),
-                    currentLocation.createYesNoResponses(),
-                    "Sleep",
-                    null);
+            // Intercept sleep dialogue as suggested by Pathos.
+            if (Game1.activeClickableMenu is DialogueBox dialogue) {
+                string text = this.Helper.Reflection.GetField<List<string>>(dialogue, "dialogues").GetValue().FirstOrDefault();
+                string sleepText = Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3996");
+                if (text == sleepText) {
+                    // handle "Go to sleep for the night?" dialogue
+                    this.Monitor.Log("Go to bed?", LogLevel.Debug);
+                    Game1.player.currentLocation.afterQuestion = GoToBed;
+                }
             }
-
-            // Remember last state.
-            gotUp_ = !isInBed;
         }
 
         private void GoToBed(Farmer who, string whichAnswer) {
             if (whichAnswer.Equals("Yes")) {
                 this.Monitor.Log($"Farmer {who.Name} goes to bed", LogLevel.Debug);
 
-                // Player is not married or spouse is in be already.
+                // Player is not married or spouse is in bed already.
                 if (!Game1.player.isMarried() || Game1.timeOfDay > 2200) {
                     FarmerSleep();
 
