@@ -11,20 +11,10 @@ using StardewValley.Menus;
 namespace GoToBed {
     public class ModEntry : Mod {
         private Vector2 bed_;
-        private volatile bool stayInBed_;
 
         public override void Entry(IModHelper helper) {
-            this.Helper.Events.GameLoop.DayStarted      += OnDayStarted;
-            this.Helper.Events.GameLoop.DayEnding       += (sender, e) => { ResetState(); };
-            this.Helper.Events.GameLoop.ReturnedToTitle += (sender, e) => { ResetState(); };
-        }
-
-        private void ResetState() {
-            // Reset state.
-            stayInBed_ = false;
-
-            // Detach event handler.
-            this.Helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
+            this.Helper.Events.GameLoop.DayStarted += OnDayStarted;
+            this.Helper.Events.Display.MenuChanged += OnMenuChanged;
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e) {
@@ -32,25 +22,17 @@ namespace GoToBed {
             bed_ = Utility.PointToVector2(Utility.getHomeOfFarmer(Game1.player).getBedSpot()) * 64f;
             bed_.X -= 64f;
             bed_.Y += 32f;
-
-            // ...but we can get up.
-            stayInBed_ = false;
-
-            // Attach event handler. We need the fast UpdateTicked event to stop player movement!
-            this.Helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         }
 
         private void OnUpdateTicked(object sender, UpdateTickedEventArgs e) {
-            if (stayInBed_) {
-                Game1.player.Position = bed_;
-                Game1.player.FacingDirection = 1;
-                Game1.player.Halt();
+            Game1.player.Position = bed_;
+            Game1.player.FacingDirection = 1;
+            Game1.player.Halt();
+        }
 
-                return;
-            }
-
+        private void OnMenuChanged(object sender, MenuChangedEventArgs e) {
             // Intercept sleep dialogue as suggested by Pathos.
-            if (Game1.activeClickableMenu is DialogueBox dialogue) {
+            if (e.NewMenu is DialogueBox dialogue) {
                 string text = this.Helper.Reflection.GetField<List<string>>(dialogue, "dialogues").GetValue().FirstOrDefault();
                 string sleepText = Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3996");
                 if (text == sleepText) {
@@ -74,10 +56,8 @@ namespace GoToBed {
 
                 // Disable player movement so spouse can finish his/her path to bed.
                 // TODO: There has to be a better way than resetting the position on every tick!
-                Game1.player.Position = bed_;
-                Game1.player.FacingDirection = 1;
-                Game1.player.Halt();
-                stayInBed_ = true;
+                // Attach event handler. We need the fast UpdateTicked event to stop player movement!
+                this.Helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
 
                 NPC spouse = Game1.player.getSpouse();
                 FarmHouse farmHouse = who.currentLocation as FarmHouse;
@@ -102,6 +82,8 @@ namespace GoToBed {
                         0,
                         (c, location) => {
                             FarmHouse.spouseSleepEndFunction(c, location);
+                            // Detach event handler.
+                            this.Helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
                             // Player can rest assured.
                             FarmerSleep();
                         });
