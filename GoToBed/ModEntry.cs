@@ -29,7 +29,7 @@ namespace GoToBed {
 
         private void GoToBed(Farmer who, string whichAnswer) {
             if (whichAnswer.Equals("Yes")) {
-                this.Monitor.Log($"Farmer {who.Name} goes to bed", LogLevel.Debug);
+                this.Monitor.Log($"Farmer {Game1.player.Name} goes to bed", LogLevel.Debug);
 
                 // Player is not married or spouse is in bed already.
                 if (!Game1.player.isMarried() || Game1.timeOfDay > 2200) {
@@ -38,11 +38,8 @@ namespace GoToBed {
                     return;
                 }
 
-                // Disable player movement so spouse can finish his/her path to bed.
-                this.Helper.Events.Input.ButtonPressed += OnButtonPressedDisableInput;
-
                 NPC spouse = Game1.player.getSpouse();
-                FarmHouse farmHouse = who.currentLocation as FarmHouse;
+                FarmHouse farmHouse = Game1.player.currentLocation as FarmHouse;
 
                 // If spouse isn't in the farm house player has to sleep alone.
                 if (spouse.currentLocation != farmHouse) {
@@ -52,6 +49,9 @@ namespace GoToBed {
 
                     return;
                 }
+
+                // Disable player movement so spouse can finish his/her path to bed.
+                this.Helper.Events.Input.ButtonPressed += OnButtonPressedDisableInput;
 
                 // Spouse goes to bed.
                 this.Monitor.Log($"Spouse {spouse.Name} goes to bed", LogLevel.Debug);
@@ -63,6 +63,7 @@ namespace GoToBed {
                         farmHouse.getSpouseBedSpot(spouse.Name),
                         0,
                         (c, location) => {
+                            c.doEmote(Character.sleepEmote);
                             FarmHouse.spouseSleepEndFunction(c, location);
                             // Enable input.
                             this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
@@ -73,6 +74,9 @@ namespace GoToBed {
 
                 if (spouse.controller.pathToEndPoint == null) {
                     this.Monitor.Log($"Spouse {spouse.Name} can't reach bed", LogLevel.Warn);
+                    // Enable input.
+                    this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
+                    EnableInput();
 
                     FarmerSleep();
                 }
