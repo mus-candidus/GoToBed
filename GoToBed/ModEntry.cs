@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -10,24 +9,9 @@ using StardewValley.Menus;
 
 namespace GoToBed {
     public class ModEntry : Mod {
-        private Vector2 bed_;
-
         public override void Entry(IModHelper helper) {
-            this.Helper.Events.GameLoop.DayStarted += OnDayStarted;
+            // Hook into MenuChanged event to intercept dialogues.
             this.Helper.Events.Display.MenuChanged += OnMenuChanged;
-        }
-
-        private void OnDayStarted(object sender, DayStartedEventArgs e) {
-            // Every day starts in bed...
-            bed_ = Utility.PointToVector2(Utility.getHomeOfFarmer(Game1.player).getBedSpot()) * 64f;
-            bed_.X -= 64f;
-            bed_.Y += 32f;
-        }
-
-        private void OnUpdateTicked(object sender, UpdateTickedEventArgs e) {
-            Game1.player.Position = bed_;
-            Game1.player.FacingDirection = 1;
-            Game1.player.Halt();
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e) {
@@ -55,9 +39,7 @@ namespace GoToBed {
                 }
 
                 // Disable player movement so spouse can finish his/her path to bed.
-                // TODO: There has to be a better way than resetting the position on every tick!
-                // Attach event handler. We need the fast UpdateTicked event to stop player movement!
-                this.Helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+                this.Helper.Events.Input.ButtonPressed += OnButtonPressedDisableInput;
 
                 NPC spouse = Game1.player.getSpouse();
                 FarmHouse farmHouse = who.currentLocation as FarmHouse;
@@ -82,8 +64,9 @@ namespace GoToBed {
                         0,
                         (c, location) => {
                             FarmHouse.spouseSleepEndFunction(c, location);
-                            // Detach event handler.
-                            this.Helper.Events.GameLoop.UpdateTicked -= OnUpdateTicked;
+                            // Enable input.
+                            this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
+                            EnableInput();
                             // Player can rest assured.
                             FarmerSleep();
                         });
@@ -94,6 +77,16 @@ namespace GoToBed {
                     FarmerSleep();
                 }
             }
+        }
+
+        private void OnButtonPressedDisableInput(object sender, ButtonPressedEventArgs e) {
+            // The button has not processed by the game yet so we can suppress it now.
+            this.Helper.Input.Suppress(e.Button);
+        }
+
+        private void EnableInput() {
+            // Enable all buttons.
+            this.Helper.Input.Suppress(SButton.None);
         }
 
         private void FarmerSleep() {
