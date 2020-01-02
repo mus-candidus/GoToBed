@@ -12,6 +12,8 @@ namespace GoToBed {
         public override void Entry(IModHelper helper) {
             // Hook into MenuChanged event to intercept dialogues.
             this.Helper.Events.Display.MenuChanged += OnMenuChanged;
+            // Enable controls at the end of day.
+            this.Helper.Events.GameLoop.DayEnding += OnDayEndingEnableInput;
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e) {
@@ -65,18 +67,13 @@ namespace GoToBed {
                         (c, location) => {
                             c.doEmote(Character.sleepEmote);
                             FarmHouse.spouseSleepEndFunction(c, location);
-                            // Enable input.
-                            this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
-                            EnableInput();
+
                             // Player can rest assured.
                             FarmerSleep();
                         });
 
                 if (spouse.controller.pathToEndPoint == null) {
                     this.Monitor.Log($"Spouse {spouse.Name} can't reach bed", LogLevel.Warn);
-                    // Enable input.
-                    this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
-                    EnableInput();
 
                     FarmerSleep();
                 }
@@ -88,7 +85,9 @@ namespace GoToBed {
             this.Helper.Input.Suppress(e.Button);
         }
 
-        private void EnableInput() {
+        private void OnDayEndingEnableInput(object sender, DayEndingEventArgs e) {
+            // If the handler wasn't attached nothing will happen here.
+            this.Helper.Events.Input.ButtonPressed -= OnButtonPressedDisableInput;
             // Enable all buttons.
             this.Helper.Input.Suppress(SButton.None);
         }
