@@ -83,6 +83,18 @@ namespace GoToBed {
         private void OnButtonPressedDisableInput(object sender, ButtonPressedEventArgs e) {
             // The button has not processed by the game yet so we can suppress it now.
             this.Helper.Input.Suppress(e.Button);
+            // Menu buttons immediately send player to sleep without waiting for spouse.
+            // This should allow us to recover from errors.
+            // Note that keyboard buttons are configurable but controller buttons are hardcoded.
+            if (Game1.options.menuButton.Any(button => button.ToSButton() == e.Button)
+             || e.Button == SButton.ControllerStart
+             || e.Button == SButton.ControllerB
+             || e.Button == SButton.ControllerY) {
+                FarmerSleep();
+            }
+            else {
+                this.Monitor.Log("Press menu button or <ESC> to fall asleep immediately", LogLevel.Info);
+            }
         }
 
         private void OnDayEndingEnableInput(object sender, DayEndingEventArgs e) {
