@@ -1,14 +1,11 @@
 using System.Linq;
 using System.Collections.Generic;
 
-using Microsoft.Xna.Framework;
-
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
 using StardewValley.Menus;
-using StardewValley.Objects;
 
 using GoToBed.Framework;
 
@@ -23,6 +20,12 @@ namespace GoToBed {
             if (config_.Stardew13SpouseSleep) {
                 // Provide StardewValley13 spouse sleeping behavior.
                 Stardew13SpouseSleepPatch.Create(this.ModManifest.UniqueID, this.Monitor);
+            }
+
+            SpouseBedTimeVerifier spouseBedTime = new SpouseBedTimeVerifier(config_, this.Monitor);
+            if (!spouseBedTime.IsDefault) {
+                // Set time when your spouse gets up and goes to bed.
+                SpouseBedTimePatch.Create(this.ModManifest.UniqueID, this.Monitor, spouseBedTime);
             }
 
             // Put hat on.
