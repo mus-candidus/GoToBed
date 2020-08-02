@@ -67,8 +67,8 @@ namespace GoToBed {
                 Game1.player.position.Y = farmHouse.getBedSpot().Y * 64f + 24f;
                 Game1.player.changeIntoSwimsuit();
 
-                // Player is not married or spouse is in bed already.
-                if (!Game1.player.isMarried() || Game1.timeOfDay > 2200) {
+                // Player is not married.
+                if (!Game1.player.isMarried()) {
                     FarmerSleep();
 
                     return;
@@ -78,6 +78,15 @@ namespace GoToBed {
                 NPC spouse = Game1.player.getSpouse();
                 if (spouse.currentLocation != farmHouse) {
                     this.Monitor.Log($"Spouse {spouse.Name} isn't in the farm house", LogLevel.Info);
+
+                    FarmerSleep();
+
+                    return;
+                }
+
+                // Spouse is already in bed.
+                if (spouse.getTileLocationPoint() == farmHouse.getSpouseBedSpot(spouse.Name)) {
+                    this.Monitor.Log($"Spouse {spouse.Name} is already in bed");
 
                     FarmerSleep();
 
