@@ -86,7 +86,7 @@ namespace GoToBed {
                 Game1.player.changeIntoSwimsuit();
 
                 // Player is not married or spouse already went to bed or current location is not farm house.
-                if (!Game1.player.isMarried() || Game1.timeOfDay > config_.SpouseGoToBedTime || farmHouse == null) {
+                if (!Game1.player.isMarriedOrRoommates() || Game1.timeOfDay > config_.SpouseGoToBedTime || farmHouse == null) {
                     FarmerSleep();
 
                     return;
