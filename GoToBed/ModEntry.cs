@@ -69,13 +69,7 @@ namespace GoToBed {
                 if (Game1.player.currentLocation is FarmHouse) {
                     farmHouse = Game1.player.currentLocation as FarmHouse;
 
-                    // Check SDV version: SMAPI 3.8 is not usable with SDV 1.4 .
-                    bool isSDV14 = StardewModdingAPI.Constants.ApiVersion.IsOlderThan("3.8.0");
-                    // Compatibility with SDV 1.4: Access old and new API via reflection.
-                    IReflectedMethod getBed = isSDV14
-                                            ? this.Helper.Reflection.GetMethod(farmHouse, nameof(FarmHouse.getBedSpot))
-                                            : this.Helper.Reflection.GetMethod(farmHouse, "GetPlayerBedSpot");
-                    Game1.player.position.Y = getBed.Invoke<Point>().Y * 64f + 24f;
+                    Game1.player.position.Y = farmHouse.GetPlayerBedSpot().Y * 64f + 24f;
                 }
 
                 // Take hat off. We could check for a hat and store it in the inventory
