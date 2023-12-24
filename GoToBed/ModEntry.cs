@@ -48,7 +48,7 @@ namespace GoToBed {
             // Intercept sleep dialogue as suggested by Pathos.
             if (e.NewMenu is DialogueBox dialogue) {
                 string text = this.Helper.Reflection.GetField<List<string>>(dialogue, "dialogues").GetValue().FirstOrDefault();
-                string sleepText = Game1.content.LoadString("Strings\\StringsFromCSFiles:NPC.cs.3996");
+                string sleepText = Game1.content.LoadString("Strings\\Locations:FarmHouse_Bed_GoToSleep");
                 if (text == sleepText) {
                     // handle "Go to sleep for the night?" dialogue
                     this.Monitor.Log("Go to bed?", LogLevel.Debug);
