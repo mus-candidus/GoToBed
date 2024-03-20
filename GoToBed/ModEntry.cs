@@ -102,7 +102,8 @@ namespace GoToBed {
                 // Spouse goes to bed.
                 this.Monitor.Log($"Spouse {spouse.Name} goes to bed", LogLevel.Debug);
 
-                spouse.controller =
+                spouse.controller = null;
+                spouse.temporaryController =
                     new PathFindController(
                         spouse,
                         farmHouse,
@@ -116,7 +117,7 @@ namespace GoToBed {
                             FarmerSleep();
                         });
 
-                if (spouse.controller.pathToEndPoint == null) {
+                if (spouse.temporaryController.pathToEndPoint == null) {
                     this.Monitor.Log($"Spouse {spouse.Name} can't reach bed", LogLevel.Warn);
 
                     FarmerSleep();
