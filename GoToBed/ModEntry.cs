@@ -45,6 +45,13 @@ namespace GoToBed {
         }
 
         private void OnMenuChanged(object sender, MenuChangedEventArgs e) {
+            // When sleeping in a tent this mod must be skipped. Fortunately tent locations are always outdoors.
+            if (Game1.player.currentLocation.IsOutdoors) {
+                this.Monitor.Log("Skipping outdoor location", LogLevel.Debug);
+
+                return;
+            }
+
             // Intercept sleep dialogue as suggested by Pathos.
             if (e.NewMenu is DialogueBox dialogue) {
                 string text = this.Helper.Reflection.GetField<List<string>>(dialogue, "dialogues").GetValue().FirstOrDefault();
