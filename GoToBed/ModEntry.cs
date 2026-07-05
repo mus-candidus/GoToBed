@@ -31,12 +31,48 @@ namespace GoToBed {
                 SpouseBedTimePatch.Create(this.ModManifest.UniqueID, this.Monitor, spouseBedTime);
             }
 
+            // GenericModConfigMenu support.
+            this.Helper.Events.GameLoop.GameLaunched += OnGameLaunched;
             // Put hat on.
             this.Helper.Events.GameLoop.DayStarted += OnDayStarted;
             // Hook into MenuChanged event to intercept dialogues.
             this.Helper.Events.Display.MenuChanged += OnMenuChanged;
             // Enable controls at the end of day.
             this.Helper.Events.GameLoop.DayEnding += OnDayEndingEnableInput;
+        }
+
+        private void OnGameLaunched(object sender, GameLaunchedEventArgs e) {
+            // GenericModConfigMenu support.
+            var configMenu = this.Helper.ModRegistry.GetApi<GenericModConfigMenu.IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
+            if (configMenu is null) {
+                return;
+            }
+
+            configMenu.Register(this.ModManifest,
+                                () => config_ = new ModConfig(),
+                                () => this.Helper.WriteConfig(config_),
+                                true);
+
+            configMenu.AddBoolOption(this.ModManifest,
+                                     () => config_.Stardew13SpouseSleep,
+                                     (val) => config_.Stardew13SpouseSleep = val,
+                                     () => "Provide StardewValley 1.3 spouse sleeping behavior");
+
+            configMenu.AddNumberOption(this.ModManifest,
+                                       () => config_.SpouseGetUpTime,
+                                       (val) => config_.SpouseGetUpTime = val,
+                                       () => "Time when your spouse gets up",
+                                       min: 600,
+                                       max: 1200,
+                                       interval: 100);
+
+            configMenu.AddNumberOption(this.ModManifest,
+                                       () => config_.SpouseGoToBedTime,
+                                       (val) => config_.SpouseGoToBedTime = val,
+                                       () => "Time when your spouse goes to bed",
+                                       min: 1200,
+                                       max: 2400,
+                                       interval: 100);
         }
 
         private void OnDayStarted(object sender, DayStartedEventArgs e) {

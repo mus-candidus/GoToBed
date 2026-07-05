@@ -11,7 +11,7 @@
         public int SpouseGetUpTime { get; set; } = SpouseBedTimeVerifier.DefaultGetUpTime;
 
         // <summary>
-        /// Gets or sets a value indicating the time when your goes to bed.
+        /// Gets or sets a value indicating the time when your spouse goes to bed.
         /// </summary>
         public int SpouseGoToBedTime { get; set; } = SpouseBedTimeVerifier.DefaultGoToBedTime;
     }
